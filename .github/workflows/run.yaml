@@ -61,9 +61,9 @@ jobs:
       - name: Set up Version Tag
         run: |
           version="${{ needs.check-version.outputs.remote_version }}"
+          echo "major_version=$(echo "$version" | awk -F '.' '{print $1}')" >> $GITHUB_ENV
+          echo "minor_version=$(echo "$version" | awk -F '.' '{print $1"."$2}')" >> $GITHUB_ENV
           echo "version=$version" >> $GITHUB_ENV
-          echo "minor_version=v$(echo "$version" | awk -F '.' '{print $1"."$2}')" >> $GITHUB_ENV
-          echo "major_version=v$(echo "$version" | awk -F '.' '{print $1}')" >> $GITHUB_ENV
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3

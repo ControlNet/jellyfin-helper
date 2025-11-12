@@ -14,6 +14,12 @@
     <a href="https://github.com/ControlNet/jellyfin-helper/actions">
         <img src="https://img.shields.io/github/actions/workflow/status/ControlNet/jellyfin-helper/run.yaml?branch=master&label=build&style=flat-square">
     </a>
+    <a href="https://hub.docker.com/r/controlnet/jellyfin">
+        <img src="https://img.shields.io/docker/v/controlnet/jellyfin?style=flat-square&logo=docker&label=Docker">
+    </a>
+    <a href="https://hub.docker.com/r/controlnet/jellyfin">
+        <img src="https://img.shields.io/docker/image-size/controlnet/jellyfin?style=flat-square&logo=docker&label=Docker">
+    </a>
 </div>
 
 
