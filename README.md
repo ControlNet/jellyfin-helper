@@ -28,3 +28,8 @@ Modify Jellyfin docker images to make it support Chinese fonts.
 ## Usage
 
 Use Docker image `controlnet/jellyfin` to replace the original `jellyfin/jellyfin` image.
+
+## Acknowledgments
+
+- tutorial about how to fix the Chinese fonts issue: https://blog.lishun.me/docker-jellyfin-chinese-fonts
+- jellyfin: https://github.com/jellyfin/jellyfin
