@@ -28,7 +28,7 @@ jobs:
         id: current-version
         run: |
           curl -s "https://registry.hub.docker.com/v2/repositories/jellyfin/jellyfin/tags?page_size=30" > remote_tags.json
-          VERSION_TAG=$(jq -r '.results[] | select(.name | test("^v[0-9]+\\.[0-9]+\\.[0-9]+$")) | .name' remote_tags.json | sort -V | tail -n 1)
+          VERSION_TAG=$(jq -r '.results[] | select(.name | test("^[0-9]+\\.[0-9]+\\.[0-9]+$")) | .name' remote_tags.json | sort -V | tail -n 1)
           MINOR_VERSION_TAG=$(echo $VERSION_TAG | awk -F '.' '{print $1"."$2}')
           echo "remote_version=$VERSION_TAG"
           echo "remote_minor_version=$MINOR_VERSION_TAG"
@@ -39,7 +39,7 @@ jobs:
         id: my-version
         run: |
           curl -s "https://registry.hub.docker.com/v2/repositories/controlnet/jellyfin/tags?page_size=10" > my_tags.json
-          MY_VERSION=$(jq -r '.results[] | select(.name | test("^v[0-9]+\\.[0-9]+\\.[0-9]+$")) | .name' my_tags.json | sort -V | tail -n 1)
+          MY_VERSION=$(jq -r '.results[] | select(.name | test("^[0-9]+\\.[0-9]+\\.[0-9]+$")) | .name' my_tags.json | sort -V | tail -n 1)
           echo "my_version=$MY_VERSION"
           echo "my_version=$MY_VERSION" >> $GITHUB_OUTPUT
 
