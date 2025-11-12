@@ -1,0 +1,3 @@
+FROM jellyfin/jellyfin:<VERSION_TAG>
+
+RUN apt update -y && apt install -y fonts-noto-cjk-extra && apt clean && rm -rf /var/lib/apt/lists/*

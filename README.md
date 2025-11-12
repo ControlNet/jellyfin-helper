@@ -1,2 +1,3 @@
 # jellyfin-helper
-Add Chinese fonts for the docker images
+
+Modify Jellyfin docker images to make it support Chinese fonts.
