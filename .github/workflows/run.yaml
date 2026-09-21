@@ -78,6 +78,7 @@ jobs:
           sed "s|<VERSION_TAG>|${version}|g" Dockerfile_template > Dockerfile
   
       - name: Build the Docker image
+        if: github.ref == 'refs/heads/master'
         uses: docker/build-push-action@v6
         env:
           VERSION_TAG: ${{ needs.check-version.outputs.remote_version }}
