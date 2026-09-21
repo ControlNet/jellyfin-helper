@@ -27,8 +27,13 @@ jobs:
       - name: Get the current tags from Docker Hub
         id: current-version
         run: |
-          curl -s "https://registry.hub.docker.com/v2/repositories/jellyfin/jellyfin/tags?page_size=30" > remote_tags.json
-          VERSION_TAG=$(jq -r '.results[] | select(.name | test("^[0-9]+\\.[0-9]+\\.[0-9]+$")) | .name' remote_tags.json | sort -V | tail -n 1)
+          # Release tags are MAJOR.MINOR.PATCH up to 10.11.x, and MAJOR.MINOR from 12.0 onwards
+          curl -s "https://registry.hub.docker.com/v2/repositories/jellyfin/jellyfin/tags?page_size=50" > remote_tags.json
+          VERSION_TAG=$(jq -r '.results[] | select(.name | test("^[0-9]+\\.[0-9]+(\\.[0-9]+)?$")) | .name' remote_tags.json | sort -V | tail -n 1)
+          if [ -z "$VERSION_TAG" ]; then
+            echo "::error::No release tag matched in jellyfin/jellyfin, the upstream tagging scheme may have changed"
+            exit 1
+          fi
           MINOR_VERSION_TAG=$(echo $VERSION_TAG | awk -F '.' '{print $1"."$2}')
           echo "remote_version=$VERSION_TAG"
           echo "remote_minor_version=$MINOR_VERSION_TAG"
@@ -39,7 +44,7 @@ jobs:
         id: my-version
         run: |
           curl -s "https://registry.hub.docker.com/v2/repositories/controlnet/jellyfin/tags?page_size=10" > my_tags.json
-          MY_VERSION=$(jq -r '.results[] | select(.name | test("^[0-9]+\\.[0-9]+\\.[0-9]+$")) | .name' my_tags.json | sort -V | tail -n 1)
+          MY_VERSION=$(jq -r '.results[] | select(.name | test("^[0-9]+\\.[0-9]+(\\.[0-9]+)?$")) | .name' my_tags.json | sort -V | tail -n 1)
           echo "my_version=$MY_VERSION"
           echo "my_version=$MY_VERSION" >> $GITHUB_OUTPUT
 
@@ -61,9 +66,22 @@ jobs:
       - name: Set up Version Tag
         run: |
           version="${{ needs.check-version.outputs.remote_version }}"
-          echo "major_version=$(echo "$version" | awk -F '.' '{print $1}')" >> $GITHUB_ENV
-          echo "minor_version=$(echo "$version" | awk -F '.' '{print $1"."$2}')" >> $GITHUB_ENV
+          if [ -z "$version" ]; then
+            echo "::error::Empty upstream version tag, refusing to build"
+            exit 1
+          fi
           echo "version=$version" >> $GITHUB_ENV
+          # MAJOR.MINOR releases make the minor tag identical to the version tag, so drop the duplicates
+          {
+            echo "tags<<TAGS_EOF"
+            {
+              echo "controlnet/jellyfin:latest"
+              echo "$version" | awk -F '.' '{print "controlnet/jellyfin:" $1}'
+              echo "$version" | awk -F '.' 'NF >= 2 {print "controlnet/jellyfin:" $1"."$2}'
+              echo "controlnet/jellyfin:$version"
+            } | awk '!seen[$0]++'
+            echo "TAGS_EOF"
+          } >> $GITHUB_ENV
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -76,19 +94,13 @@ jobs:
       - name: Generate Dockerfile
         run: |
           sed "s|<VERSION_TAG>|${version}|g" Dockerfile_template > Dockerfile
-  
+
       - name: Build the Docker image
         if: github.ref == 'refs/heads/master'
         uses: docker/build-push-action@v6
-        env:
-          VERSION_TAG: ${{ needs.check-version.outputs.remote_version }}
         with:
           context: ./
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: | 
-            controlnet/jellyfin:latest
-            controlnet/jellyfin:${{ env.version }}
-            controlnet/jellyfin:${{ env.minor_version }}
-            controlnet/jellyfin:${{ env.major_version }}
+          tags: ${{ env.tags }}
